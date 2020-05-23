@@ -190,5 +190,7 @@ void free_variables() {
         delete []g_delta_top;
         delete []g_phi_top;
         delete []g_rank;
+        g_delta = g_phi = g_delta_top = NULL;
+        g_phi_top = g_rank = NULL;
     }
 }

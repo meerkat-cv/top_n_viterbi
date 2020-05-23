@@ -26,6 +26,8 @@ struct ProbState {
 };
 
 extern "C" {
+    // outPath memory allocation/deallocation is responsability of the caller.
+    // It must have topK*nStates length.
     void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T, int* outPath);
     void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK, int* outPaths);
     void free_variables();
