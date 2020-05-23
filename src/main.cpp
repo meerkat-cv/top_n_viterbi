@@ -43,30 +43,26 @@ int read_matrix(string filename, float* outMatrix) {
     vector<string> splits = split_string(line, string(" "));
     for (int i=0; i<splits.size(); i++) {
         outMatrix[i] = atof(splits.at(i).c_str());
-        printf("%f ", outMatrix[i]);
     }
-    printf("\n\n");
     return splits.size();
 }
 
 
 
 int main(int argc, char* agv[]) {
-    printf("Hello World!\n\n");
-
     float* pi = new float[ALPHABET_LEN];
     float* a = new float[ALPHABET_LEN*ALPHABET_LEN];
     float* b = new float[ALPHABET_LEN*TIME_LEN];
     alloc();
 
-    int alphabet_size = read_matrix(string("pi.txt"), pi);    
-    read_matrix(string("a.txt"), a);    
-    int b_size = read_matrix(string("b.txt"), b);    
+    int alphabet_size = read_matrix(string("../data/pi.txt"), pi);
+    read_matrix(string("../data/a.txt"), a);
+    int b_size = read_matrix(string("../data/b.txt"), b);
     int time_size = b_size/alphabet_size;
 
-    // print_matrix(string("pi"), pi, alphabet_size, 1, 1);
-    // print_matrix(string("a"), a, alphabet_size, alphabet_size, 1);
-    // print_matrix(string("b"), b, alphabet_size, time_size, 1);
+    print_matrix(string("pi"), pi, alphabet_size, 1, 1);
+    print_matrix(string("a"), a, alphabet_size, alphabet_size, 1);
+    print_matrix(string("b"), b, alphabet_size, time_size, 1);
 
     printf("Runing viterbi with:\n\talphabet_size: %d\n\ttime_size: %d\n--------",
             alphabet_size, time_size);
