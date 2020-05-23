@@ -192,16 +192,3 @@ void free_variables() {
         delete []g_rank;
     }
 }
-
-
-void print_stuff() {
-    printf("Printing from C++\n");
-}
-
-void print_numpy_float32_array(float *array, int size) {
-    for (int i=0; i<size; i++) {
-        printf("%f ", array[i]);
-        array[i] = i*3;
-    }
-    printf("\n");
-}

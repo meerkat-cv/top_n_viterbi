@@ -26,8 +26,6 @@ struct ProbState {
 };
 
 extern "C" {
-    void print_stuff();
-    void print_numpy_float32_array(float *array, int size);
     void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T, int* outPath);
     void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK, int* outPaths);
     void free_variables();

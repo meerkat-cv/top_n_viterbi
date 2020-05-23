@@ -60,7 +60,7 @@ int main(int argc, char* agv[]) {
     read_matrix(string("../data/a.txt"), a);
     int b_size = read_matrix(string("../data/b.txt"), b);
     int time_size = b_size/alphabet_size;
-    int top_n = 10;
+    int top_n = 4;
 
     print_matrix(string("pi"), pi, alphabet_size, 1, 1);
     print_matrix(string("a"), a, alphabet_size, alphabet_size, 1);
