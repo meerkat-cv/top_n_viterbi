@@ -10,12 +10,11 @@ int get_coord(int H, int h, int W, int w, int C, int c)
     return h*W*C + w*C + c;
 }
 
-vector<int> ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T)
+void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T, int* outPath)
 {
     if (g_delta == NULL) {
         alloc();
     }
-    vector<int> path(T,0);
 
     for (int i=0; i<nStates; i++) {
         for (int t=1; t<T; t++) {
@@ -50,28 +49,24 @@ vector<int> ocr_viterbi(const float *pi, const float *a, const float *b, int nSt
             max_delta_idx = i;
         }
     }
-    path[T-1] = max_delta_idx;
+    outPath[T-1] = max_delta_idx;
     for (int t=T-2; t>-1; t--) {
-        path[t] = g_phi[path[t+1]*T + t + 1];
+        outPath[t] = g_phi[outPath[t+1]*T + t + 1];
     }
     printf("\n\nPath: ");
     for (int t=0; t<T; t++) {
-        printf("%d ", path[t]);
+        printf("%d ", outPath[t]);
     }
-
-    return path;
 }
 
 
-vector<vector<int>> ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK)
+void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK, int* outPaths)
 {
     if (g_delta == NULL) {
         alloc();
     }
-    vector<vector<int>> final_paths;
     if (topK == 1) {
-        final_paths.push_back(ocr_viterbi(pi, a, b, nStates, T));
-        return final_paths;
+        ocr_viterbi(pi, a, b, nStates, T, outPaths);
     }
 
     for (int t=0; t<T; t++) {
@@ -144,9 +139,8 @@ vector<vector<int>> ocr_viterbi_topk(const float *pi, const float *a, const floa
     }
 
     float *path_probs = new float[topK*T];
-    int *path = new int[topK*T];
     for (int i=0; i<topK*T; i++) {
-        path_probs[i] = path[i] = 0;
+        path_probs[i] = outPaths[i] = 0;
     }
 
     // Now backtrace for k and each time stamp
@@ -158,16 +152,16 @@ vector<vector<int>> ocr_viterbi_topk(const float *pi, const float *a, const floa
 
         // Assign to output arrays
         path_probs[k*T+T-1] = max_prob;
-        path[k*T+T-1] = state;
+        outPaths[k*T+T-1] = state;
 
         // Then from t down to 0 store the correct sequence for t+1
         for (int t=T-2; t>-1; t--) {
-            int nextState = path[k*T+t+1];
+            int nextState = outPaths[k*T+t+1];
 
             int idx = get_coord(T, t+1, nStates, nextState, topK, rankK);
             float p = g_phi_top[idx];
 
-            path[k*T+t] = p;
+            outPaths[k*T+t] = p;
 
             rankK = g_rank[idx];
         }
@@ -179,8 +173,6 @@ vector<vector<int>> ocr_viterbi_topk(const float *pi, const float *a, const floa
     // }
 
     delete []path_probs;
-    delete []path;
-    return vector<vector<int>>();
 }
 
 void alloc() {
@@ -191,7 +183,7 @@ void alloc() {
     g_rank = new float[ALPHABET_LEN*TIME_LEN*TOP_N];
 }
 
-void free() {
+void free_variables() {
     if (g_delta != NULL) {
         delete []g_delta;
         delete []g_phi;
