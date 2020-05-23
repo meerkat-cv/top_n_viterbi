@@ -102,7 +102,7 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
             for (int s2=0; s2<nStates; s2++) {
                 for (int k=0; k<topK; k++) {
                     int idx = get_coord(T, t-1, nStates, s2, topK, k);
-                    float prob = g_delta_top[idx] + a[s2*nStates+s1] + b[s1*T + t];
+                    float prob = g_delta_top[idx] * a[s2*nStates+s1] * b[s1*T + t];
                     g_state_vec[vec_idx].prob = prob;
                     g_state_vec[vec_idx++].state = s2;
                 }
