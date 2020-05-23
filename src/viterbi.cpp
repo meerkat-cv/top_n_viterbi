@@ -1,9 +1,13 @@
 #include "viterbi.h"
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
 
 float *g_delta=NULL, *g_phi=NULL, *g_delta_top=NULL, *g_phi_top=NULL, *g_rank=NULL;
+vector<ProbState> g_state_vec = vector<ProbState>(ALPHABET_LEN*ALPHABET_LEN,ProbState());
+vector<ProbStateRank> g_state_rank_vec = vector<ProbStateRank>(ALPHABET_LEN*TOP_N,ProbStateRank());
 
 int get_coord(int H, int h, int W, int w, int C, int c)
 {
@@ -94,24 +98,26 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
 
     for (int t=1; t<T; t++) {
         for (int s1=0; s1<nStates; s1++) {
-            priority_queue<ProbState> h;
+            int vec_idx=0;
             for (int s2=0; s2<nStates; s2++) {
                 for (int k=0; k<topK; k++) {
                     int idx = get_coord(T, t-1, nStates, s2, topK, k);
-                    float prob = g_delta_top[idx] * a[s2*nStates+s1] * b[s1*T + t];
-                    h.push(ProbState(prob, s2, 0));
+                    float prob = g_delta_top[idx] + a[s2*nStates+s1] + b[s1*T + t];
+                    g_state_vec[vec_idx].prob = prob;
+                    g_state_vec[vec_idx++].state = s2;
                 }
             }
+
+            partial_sort(g_state_vec.begin(), g_state_vec.begin()+topK, g_state_vec.begin()+vec_idx);
 
             unordered_map<int,int> rankDict;
 
             for (int k=0; k<topK; k++) {
                 int idx = get_coord(T, t, nStates, s1, topK, k);
-                ProbState ps = h.top();
-                h.pop();
+                ProbState ps = g_state_vec[k];
                 g_delta_top[idx] = ps.prob;
-                g_phi_top[idx] = ps.state1;
-                int state = ps.state1;
+                g_phi_top[idx] = ps.state;
+                int state = ps.state;
 
                 if (rankDict.find(state) != rankDict.end()) {
                     rankDict[state] += 1;
@@ -128,13 +134,14 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
     // print_matrix(string("Delta"), g_delta_top, T, nStates, topK);
     // print_matrix(string("Phi"), g_phi_top, T, nStates, topK);
 
-    vector<ProbState> h;
-
+    int vec_idx = 0;
     for (int s1=0; s1<nStates; s1++) {
         for (int k=0; k<topK; k++) {
             int idx = get_coord(T, T-1, nStates, s1, topK, k);
             float prob = g_delta_top[idx];
-            h.push_back(ProbState(prob, s1, k));
+            g_state_rank_vec[vec_idx].prob = prob;
+            g_state_rank_vec[vec_idx].state1 = s1;
+            g_state_rank_vec[vec_idx++].state2 = k;
         }
     }
 
@@ -143,12 +150,14 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
         path_probs[i] = outPaths[i] = 0;
     }
 
+    partial_sort(g_state_rank_vec.begin(), g_state_rank_vec.begin()+topK, g_state_rank_vec.begin()+vec_idx);
+
     // Now backtrace for k and each time stamp
     for (int k=0; k<topK; k++) {
         // The maximum probability and the state it came from
-        float max_prob = h[k].prob;
-        int state = h[k].state1;
-        int rankK = h[k].state2;
+        float max_prob = g_state_rank_vec[k].prob;
+        int state = g_state_rank_vec[k].state1;
+        int rankK = g_state_rank_vec[k].state2;
 
         // Assign to output arrays
         path_probs[k*T+T-1] = max_prob;

@@ -72,7 +72,7 @@ int main(int argc, char* agv[]) {
 
     auto start = chrono::steady_clock::now();
     for (int i=0; i<1; i++) {
-        ocr_viterbi_topk(pi, a, b, alphabet_size, time_size, 10, paths);
+        ocr_viterbi_topk(pi, a, b, alphabet_size, time_size, top_n, paths);
     }
     auto end = chrono::steady_clock::now();
     printf("\nElapsed time in milliseconds : %ld ms\n", 
