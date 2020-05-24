@@ -13,6 +13,7 @@ ocr_viterbi_topk.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
     ndpointer(ctypes.c_int, flags='C_CONTIGUOUS'),
+    ndpointer(ctypes.c_float, flags='C_CONTIGUOUS'),
 ]
 
 
@@ -22,8 +23,10 @@ b = np.asarray([[0.2, 0.4, 0.8], [0.8, 0.6, 0.2]], dtype=np.float32)
 top_n = 4
 
 paths = np.zeros((top_n, b.shape[1]), dtype=np.int32)
-ocr_viterbi_topk(pi, a, b, b.shape[0], b.shape[1], top_n, paths)
+probs = np.zeros((top_n,), dtype=np.float32)
+ocr_viterbi_topk(pi, a, b, b.shape[0], b.shape[1], top_n, paths, probs)
 
-print('paths', paths)
+for path,prob in zip(paths,probs):
+    print('{:.6f} - {}'.format(prob, path))
 
 lib.free_variables()

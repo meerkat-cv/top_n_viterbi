@@ -66,13 +66,14 @@ int main(int argc, char* agv[]) {
     print_matrix(string("a"), a, alphabet_size, alphabet_size, 1);
     print_matrix(string("b"), b, alphabet_size, time_size, 1);
     int *paths = new int[top_n*time_size];
+    float *paths_probs = new float[top_n];
 
     printf("Runing viterbi with:\n\talphabet_size: %d\n\ttime_size: %d\n--------",
             alphabet_size, time_size);
 
     auto start = chrono::steady_clock::now();
     for (int i=0; i<1; i++) {
-        ocr_viterbi_topk(pi, a, b, alphabet_size, time_size, top_n, paths);
+        ocr_viterbi_topk(pi, a, b, alphabet_size, time_size, top_n, paths, paths_probs);
     }
     auto end = chrono::steady_clock::now();
     printf("\nElapsed time in milliseconds : %ld ms\n", 
@@ -80,7 +81,7 @@ int main(int argc, char* agv[]) {
 
     printf("\nPaths:\n");
     for (int p=0; p<top_n; p++) {
-        printf("\t( ");
+        printf("\t( [%f] ", paths_probs[p]);
         for (int t=0; t<time_size; t++) {
             printf("%d ", paths[p*time_size+t]);
         }
@@ -91,6 +92,7 @@ int main(int argc, char* agv[]) {
     delete []a;
     delete []b;
     delete []paths;
+    delete []paths_probs;
     free_variables();
 
     return 0;

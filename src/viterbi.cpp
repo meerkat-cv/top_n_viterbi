@@ -14,7 +14,7 @@ int get_coord(int H, int h, int W, int w, int C, int c)
     return h*W*C + w*C + c;
 }
 
-void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T, int* outPath)
+void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, int T, int *outPath, float *outProbs)
 {
     if (g_delta == NULL) {
         alloc();
@@ -53,6 +53,7 @@ void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, i
             max_delta_idx = i;
         }
     }
+    outProbs[0] = max;
     outPath[T-1] = max_delta_idx;
     for (int t=T-2; t>-1; t--) {
         outPath[t] = g_phi[outPath[t+1]*T + t + 1];
@@ -60,13 +61,13 @@ void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, i
 }
 
 
-void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK, int* outPaths)
+void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStates, int T, int topK, int *outPaths, float *outProbs)
 {
     if (g_delta == NULL) {
         alloc();
     }
     if (topK == 1) {
-        ocr_viterbi(pi, a, b, nStates, T, outPaths);
+        ocr_viterbi(pi, a, b, nStates, T, outPaths, outProbs);
     }
 
     for (int t=0; t<T; t++) {
@@ -141,11 +142,6 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
         }
     }
 
-    float *path_probs = new float[topK*T];
-    for (int i=0; i<topK*T; i++) {
-        path_probs[i] = outPaths[i] = 0;
-    }
-
     partial_sort(g_state_rank_vec.begin(), g_state_rank_vec.begin()+topK, g_state_rank_vec.begin()+vec_idx);
 
     // Now backtrace for k and each time stamp
@@ -156,8 +152,8 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
         int rankK = g_state_rank_vec[k].state2;
 
         // Assign to output arrays
-        path_probs[k*T+T-1] = max_prob;
         outPaths[k*T+T-1] = state;
+        outProbs[k] = max_prob;
 
         // Then from t down to 0 store the correct sequence for t+1
         for (int t=T-2; t>-1; t--) {
@@ -171,13 +167,6 @@ void ocr_viterbi_topk(const float *pi, const float *a, const float *b, int nStat
             rankK = g_rank[idx];
         }
     }
-
-    // printf("\n\nPath: ");
-    // for (int t=0; t<T; t++) {
-    //     printf("%d ", path[t]);
-    // }
-
-    delete []path_probs;
 }
 
 void alloc() {
