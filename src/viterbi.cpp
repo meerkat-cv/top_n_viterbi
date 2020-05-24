@@ -57,10 +57,6 @@ void ocr_viterbi(const float *pi, const float *a, const float *b, int nStates, i
     for (int t=T-2; t>-1; t--) {
         outPath[t] = g_phi[outPath[t+1]*T + t + 1];
     }
-    printf("\n\nPath: ");
-    for (int t=0; t<T; t++) {
-        printf("%d ", outPath[t]);
-    }
 }
 
 
